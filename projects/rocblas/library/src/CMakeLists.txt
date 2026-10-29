@@ -658,6 +658,38 @@ set( subdir_src64_list
 
 prepend_path( ".." rocblas_headers_public relative_rocblas_headers_public )
 
+# HIP-CPU host-only build.
+# Skip the BLAS device kernels that use AMDGPU wavefront intrinsics.
+# Compile the host framework and the stub TU. The stubs return rocblas_status_not_implemented.
+if(BUILD_HOST_ONLY)
+  set( rocblas_auxiliary_source
+    handle.cpp
+    logging.cpp
+    rocblas_auxiliary.cpp
+    buildinfo.cpp
+    rocblas_ostream.cpp
+    check_numerics_vector.cpp
+    utility.cpp
+  )
+  # axpy kernel. It uses no AMDGPU wavefront intrinsics.
+  set( rocblas_blas1_source
+    blas1/rocblas_axpy.cpp
+    blas1/rocblas_axpy_kernels.cpp
+  )
+  set( rocblas_blas2_source "" )
+  set( rocblas_blas3_source "" )
+  set( rocblas_blas3_source_no_tensile "" )
+  set( rocblas_ex_source "" )
+  set( rocblas_ex_source_no_tensile "" )
+  set( rocblas_tensile_host_cpp "" )
+  set( subdir_src64_list "" )
+  if(ROCBLAS_HOST_ONLY_STUBS)
+    list( APPEND rocblas_auxiliary_source ${ROCBLAS_HOST_ONLY_STUBS} )
+  else()
+    message(FATAL_ERROR "BUILD_HOST_ONLY=ON requires ROCBLAS_HOST_ONLY_STUBS (path to generated rocblas_stubs.cpp)")
+  endif()
+endif()
+
 add_library( rocblas
   # ordered from generally slowest to compile to faster to increase parallelism
   ${rocblas_blas3_source}

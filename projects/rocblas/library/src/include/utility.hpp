@@ -41,14 +41,10 @@ typedef rocblas_half rocblas_half2 __attribute__((ext_vector_type(2)));
 typedef rocblas_half rocblas_half4 __attribute__((ext_vector_type(4)));
 
 #ifndef GOOGLE_TEST
-extern "C" __device__ rocblas_half2 llvm_fma_v2f16(rocblas_half2,
-                                                   rocblas_half2,
-                                                   rocblas_half2) __asm("llvm.fma.v2f16");
-
 __device__ inline rocblas_half2
     rocblas_fmadd_half2(rocblas_half2 multiplier, rocblas_half2 multiplicand, rocblas_half2 addend)
 {
-    return llvm_fma_v2f16(multiplier, multiplicand, addend);
+    return __builtin_elementwise_fma(multiplier, multiplicand, addend);
 }
 
 // Conjugate a value. For most types, simply return argument; for
