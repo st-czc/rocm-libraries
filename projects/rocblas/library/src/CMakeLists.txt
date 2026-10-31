@@ -677,7 +677,10 @@ if(BUILD_HOST_ONLY)
     blas1/rocblas_axpy_kernels.cpp
   )
   set( rocblas_blas2_source "" )
-  set( rocblas_blas3_source "" )
+  # GEMM kernel that calls OpenBLAS cblas_*gemm from a (1,1,1) kernel.
+  set( rocblas_blas3_source
+    blas3/rocblas_gemm_host.cpp
+  )
   set( rocblas_blas3_source_no_tensile "" )
   set( rocblas_ex_source "" )
   set( rocblas_ex_source_no_tensile "" )
@@ -703,6 +706,16 @@ add_library( rocblas
   ${rocblas_auxiliary_source}
   ${subdir_src64_list}
 )
+
+# HIP-CPU host-only build: the device image is produced during the compile of
+# blas3/rocblas_gemm_host.cpp. Pass OpenBLAS link flags to that device image so
+# its cblas_*gemm references resolve.
+if(BUILD_HOST_ONLY)
+  target_compile_options( rocblas PRIVATE
+    --hipcpu-device-link=-L${ROCM_PATH}/lib
+    --hipcpu-device-link=-lopenblas
+  )
+endif()
 
 # Add Windows version resource to library
 if(WIN32 AND BUILD_SHARED_LIBS)
